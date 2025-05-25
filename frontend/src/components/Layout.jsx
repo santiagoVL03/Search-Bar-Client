@@ -1,8 +1,9 @@
 import React from 'react'
+import './css/layout.css'
 
 export default function Layout({ children }) {
   return (
-    <div className="d-flex flex-column min-vh-100">
+    <div className="d-flex flex-column min-vh-100 custom-layer">
       {/* Header fijo arriba */}
       <header className="navbar navbar-dark bg-dark text-white px-4">
         <span>Just Another Search Bar</span>

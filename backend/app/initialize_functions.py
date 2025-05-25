@@ -1,3 +1,4 @@
+from app.modules.search.route import search_bp
 from flask import Flask
 from flasgger import Swagger
 from app.modules.main.route import main_bp
@@ -6,6 +7,7 @@ from app.db.db import db
 
 def initialize_route(app: Flask):
     with app.app_context():
+        app.register_blueprint(search_bp, url_prefix='/api/v1/search')
         app.register_blueprint(main_bp, url_prefix='/api/v1/main')
 
 
