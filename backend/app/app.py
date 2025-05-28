@@ -1,6 +1,7 @@
 from flask import Flask
 from app.config.config import get_config_by_name
 from app.initialize_functions import initialize_route, initialize_db, initialize_swagger
+from flask_cors import CORS
 
 def create_app(config=None) -> Flask:
     """
@@ -13,6 +14,7 @@ def create_app(config=None) -> Flask:
         A Flask application instance.
     """
     app = Flask(__name__)
+    CORS(app) # Enable CORS for all routes
     if config:
         app.config.from_object(get_config_by_name(config))
 

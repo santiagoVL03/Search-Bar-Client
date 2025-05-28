@@ -11,7 +11,12 @@ class SearchController:
         self.input_path = '/input/docs'
         self.jar_path = '/home/kali/inverted.jar'
 
-    def index(self):
+    def index(self, word = None):
+        if word:
+            return {
+                'status': 'success',
+                'message': 'You send a word.'
+            }
         # Paso 1: Eliminar salida previa en HDFS
         cleanup_cmd = f'hdfs dfs -rm -r -f {self.hdfs_output_path}'
         cleanup_result = self._ssh_execute(cleanup_cmd)

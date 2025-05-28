@@ -1,4 +1,4 @@
-from flask import Blueprint, make_response, jsonify
+from flask import Blueprint, make_response, jsonify, request
 from .controller import SearchController
 
 
@@ -23,6 +23,7 @@ def index():
                   type: string
                   example: "Hello World!"
     """
-    result=search_controller.index()
+    search_word = request.args.get('word')
+    result=search_controller.index(search_word)
     return make_response(jsonify(data=result))
       
