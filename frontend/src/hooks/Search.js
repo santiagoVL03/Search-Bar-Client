@@ -18,6 +18,15 @@ export function Charge_results() {
         .then(data => {
             console.log('Search results:', data);
             // Here you would update the state to display the results
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const downloadUrl = URL.createObjectURL(blob);
+            const downloadLink = document.createElement('a');
+            downloadLink.href = downloadUrl;
+            downloadLink.download = 'search_results.json';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            URL.revokeObjectURL(downloadUrl);
         })
         .catch(error => console.error('Error fetching search results:', error));
 }
