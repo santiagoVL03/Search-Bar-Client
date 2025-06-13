@@ -1,0 +1,13 @@
+{
+  "ssh_host": "master",
+  "ssh_user": "hduser",
+  "ssh_password": "kali",
+  "hdfs_output_path": "/inverted_index",
+  "input_path": "/metadata",
+  "jar_path": "$HADOOP_HOME/share/hadoop/tools/lib/hadoop-streaming-*.jar",
+  "mapper_cmd": "python3 map.py",
+  "reducer_cmd": "python3 reduce.py",
+  "map_path": "/home/hduser/BASIC-SEARCH-BAR-IN-CLUSTER/Index/map.py",
+  "reduce_path": "/home/hduser/BASIC-SEARCH-BAR-IN-CLUSTER/Index/reduce.py",
+  "local_video_dir": "/tmp/video"
+}

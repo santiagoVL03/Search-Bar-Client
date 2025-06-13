@@ -1,36 +1,23 @@
 import React, { useState } from 'react'
 import Results from '../results/Result'
+import { useSearch } from '../../hooks/useSearch'
+import Swal from 'sweetalert2'
 
 export default function Search() {
   const [searchInput, setSearchInput] = useState('')
-  const [results, setResults] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const { loading, error, results, searchVideos } = useSearch()
 
   const handleSearch = () => {
     if (searchInput.trim() === '') {
-      alert('Please enter a search term')
+      Swal.fire({
+        icon: 'warning',
+        title: 'Empty Search',
+        text: 'Please enter a search term.',
+        confirmButtonText: 'OK'
+      })
       return
     }
-
-    setLoading(true)
-    setError(null)
-
-    const url = `http://localhost:5000/api/v1/search/?word=${searchInput}`
-
-    fetch(url)
-      .then(res => {
-        if (!res.ok) throw new Error('Network response was not ok')
-        return res.json()
-      })
-      .then(data => {
-        setResults(data)
-        setLoading(false)
-      })
-      .catch(err => {
-        setError(err.message)
-        setLoading(false)
-      })
+    searchVideos(searchInput)
   }
 
   return (
@@ -51,8 +38,7 @@ export default function Search() {
       </div>
 
       {loading && <p>Loading results...</p>}
-      {error && <p style={{color: 'red'}}>Error: {error}</p>}
-
+      {error && <p style={{ color: 'red' }}>Error: {error}</p>}
       {results && <Results data={results} />}
     </div>
   )

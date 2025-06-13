@@ -1,14 +1,12 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Charge_results } from '../../hooks/Search'
 
 export default function Results({ data }) {
-  const [filterText, setFilterText] = useState('')
-
   const output = data?.data?.output || {}
 
   const filteredOutput = Object.entries(output).reduce((acc, [video, objects]) => {
     const filteredObjects = objects.filter(obj =>
-      obj.object.toLowerCase().includes(filterText.toLowerCase())
+      obj.object.toLowerCase()
     )
     if (filteredObjects.length > 0) {
       acc[video] = filteredObjects
@@ -18,16 +16,7 @@ export default function Results({ data }) {
 
   return (
     <div>
-      <input
-        type="text"
-        placeholder="Filter objects..."
-        value={filterText}
-        onChange={e => setFilterText(e.target.value)}
-        style={{ marginBottom: '20px', padding: '5px' }}
-      />
-      {Object.keys(filteredOutput).length === 0 ? (
-        <p>No results found.</p>
-      ) : (
+      {
         Object.entries(filteredOutput).map(([video, objects]) => (
           <div key={video} style={{ marginBottom: '30px' }}>
             <h3>{video}</h3>
@@ -36,6 +25,7 @@ export default function Results({ data }) {
                 <tr>
                   <th>Object</th>
                   <th>Count</th>
+                  <th>Video</th>
                 </tr>
               </thead>
               <tbody>
@@ -43,13 +33,20 @@ export default function Results({ data }) {
                   <tr key={i}>
                     <td>{object}</td>
                     <td>{count}</td>
+                    <td>
+                      <a
+                        className="btn btn-dark"
+                        href={`http://localhost:5000/api/v1/video/${video}`} target="_blank" rel="noopener noreferrer">
+                        Watch Video
+                      </a>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        ))
-      )}
+        )
+        )}
     </div>
   )
 }

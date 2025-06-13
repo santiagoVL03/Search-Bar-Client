@@ -1,3 +1,4 @@
+from app.modules.video.route import video_bp
 from app.modules.search.route import search_bp
 from flask import Flask
 from flasgger import Swagger
@@ -7,6 +8,7 @@ from app.db.db import db
 
 def initialize_route(app: Flask):
     with app.app_context():
+        app.register_blueprint(video_bp, url_prefix='/api/v1/video')
         app.register_blueprint(search_bp, url_prefix='/api/v1/search')
         app.register_blueprint(main_bp, url_prefix='/api/v1/main')
 
