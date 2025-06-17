@@ -10,5 +10,10 @@
   "reducer_cmd": "python3 reduce.py",
   "map_path": "/home/hduser/BASIC-SEARCH-BAR-IN-CLUSTER/Index/map.py",
   "reduce_path": "/home/hduser/BASIC-SEARCH-BAR-IN-CLUSTER/Index/reduce.py",
-  "local_video_dir": "/tmp/video"
+  "local_video_dir": "/tmp/video",
+  "spark_output_path": "/oursystem/output/spark_inverted_index",
+  "spark_class": "InvertedIndex",
+  "search_motor": "/home/hduser/BASIC-SEARCH-BAR-IN-CLUSTER/spark/functions/search_motor.jar",
+  "hive_page_ranking": "/home/hduser/BASIC-SEARCH-BAR-IN-CLUSTER/hive/system/busqueda_page_ranking.HQL",
+  "hive_page_ranking_output": "/oursystem/output/page_rank/"
 }

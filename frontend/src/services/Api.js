@@ -8,3 +8,14 @@ export async function fetchSearchResults(query) {
 
   return response.json()
 }
+
+export async function fetchSearchResultsSpark(query) {
+  const url = `http://localhost:5000/api/v1/spark_search/?word=${encodeURIComponent(query)}`
+  const response = await fetch(url)
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok')
+  }
+
+  return response.json()
+}

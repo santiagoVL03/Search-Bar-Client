@@ -1,71 +1,78 @@
-import paramiko
+import os
 import json
-from app.utils.functions_ssh import _ssh_execute, parse_hdfs_output_to_json
+from app.utils.functions_ssh import _ssh_execute, parse_spark_output_to_json
 import os
 from collections import OrderedDict
-class SearchController:
+
+class Spark_searchController:
     def __init__(self):
         base_dir = os.path.dirname(__file__)
         config_path = os.path.abspath(os.path.join(base_dir, '../../config/config.json'))
         with open(config_path, 'r') as config_file:
             config = json.load(config_file)
-        self.name = 'SearchController'
+        self.name = 'SearchControllerSpark'
         self.description = 'Controller for show an video from the cluster'
         self.ssh_host = config['ssh_host']
         self.ssh_user = config['ssh_user']
         self.ssh_password = config['ssh_password']
-        self.hdfs_output_path = config['hdfs_output_path']
-        self.input_path = config['input_path']
+        self.spark_output_path = config['spark_output_path']
+        self.spark_class = config['spark_class']
         self.jar_path = config['jar_path']
-        self.mapper = config['mapper_cmd']
-        self.reducer = config['reducer_cmd']
-        self.map = config['map_path']
-        self.reduce = config['reduce_path']
+        self.search_motor = config['search_motor']
+        self.hive_page_ranking = config['hive_page_ranking']
+        self.hive_page_ranking_output = config['hive_page_ranking_output']
 
     def index(self, word = None):
-        cleanup_cmd = f'hadoop fs -rm -r {self.hdfs_output_path}'
+        cleanup_cmd = f'hadoop fs -rm -r {self.spark_output_path}'
         cleanup_result = _ssh_execute(cleanup_cmd, self.ssh_host, self.ssh_user, self.ssh_password)
-        
         if cleanup_result['status'] == 'error':
             print(f"Error cleaning up HDFS output: {cleanup_result['output']} THIS ERROR IS NOT BLOCKING")
-        
-        # create_directory_cmd = f'hadoop fs -mkdir -p {self.hdfs_output_path}'
-        # create_directory_result = _ssh_execute(create_directory_cmd, self.ssh_host, self.ssh_user, self.ssh_password)
-        
-        # if create_directory_result['status'] == 'error':
-        #     print(f"Error creating HDFS output directory: {create_directory_result['output']} THIS ERROR IS NOT BLOCKING")
-            
         job_cmd = (
-            f"hadoop jar {self.jar_path} "
-            f"-input {self.input_path} "
-            f"-output {self.hdfs_output_path} "
-            f"-mapper \"{self.mapper}\" "
-            f"-reducer \"{self.reducer}\" "
-            f"-file {self.map} "
-            f"-file {self.reduce} "
+            f"spark-submit "
+            f"--class \"{self.spark_class}\" "
+            f"--master yarn "
+            f"--deploy-mode cluster "
+            f" {self.search_motor} "
         )
-
         job_result = _ssh_execute(job_cmd, self.ssh_host, self.ssh_user, self.ssh_password)
         if job_result['status'] == 'error':
-            print(f"Error executing MapReduce job: {job_result['output']} THIS ERROR IS NOT BLOCKING")
+            print(f"Error executing Spark job: {job_result['output']} THIS ERROR IS NOT BLOCKING")
+            
+        job_hive = (
+            f"hive -hivevar "
+            f"search_class = {word} "
+            f"-f \"{self.hive_page_ranking}\" "
+        )
+        
+        job_hive_result = _ssh_execute(job_hive, self.ssh_host, self.ssh_user, self.ssh_password)
+        if job_hive_result['status'] == 'error':
+            print(f"Error executing Hive job: {job_hive_result['output']} THIS ERROR IS NOT BLOCKING")
+        
+        read_cmd_hive = f'hdfs dfs -cat {self.hive_page_ranking_output}/{word}/0*'
+        read_result_hive = _ssh_execute(read_cmd_hive, self.ssh_host, self.ssh_user, self.ssh_password)
+        if read_result_hive['status'] == 'error':
+            return {
+                'status': 'error',
+                'output': {}
+            }
+        print(read_result_hive['output'])
+        
+        output_hive = read_result_hive['output']
 
-        read_cmd = f'hdfs dfs -cat {self.hdfs_output_path}/part-*'
+        read_cmd = f'hdfs dfs -cat {self.spark_output_path}/part-*'
         read_result = _ssh_execute(read_cmd, self.ssh_host, self.ssh_user, self.ssh_password)
         if read_result['status'] == 'error':
             return {
-                'step': 'read_output',
-                'error': 'Error reading output from HDFS',
-                'details': read_result['output']
+                'status': 'error',
+                'output': {}
             }
-            
         print(read_result['output'])
         output = read_result['output']
-        output_json = parse_hdfs_output_to_json(output)
-        json_str = json.dumps(output_json, indent=4)
-        print(json_str)
+        
+        parsed_output = parse_spark_output_to_json(output, output_hive)
         if word:
             filtered_output = OrderedDict()
-            for filename, info in output_json.items():
+            for filename, info in parsed_output.items():
                 filtered_detections = [
                     obj for obj in info["objects"]
                     if word.lower() in obj["object"].lower()
@@ -80,8 +87,8 @@ class SearchController:
                 'status': 'success',
                 'output': filtered_output
             }
-            
-        if not output_json:
+
+        if not parsed_output:
             return {
                 'status': 'success',
                 'output': {}
@@ -89,5 +96,5 @@ class SearchController:
         else:
             return {
                 'status': 'success',
-                'output': output_json
+                'output': parsed_output
             }

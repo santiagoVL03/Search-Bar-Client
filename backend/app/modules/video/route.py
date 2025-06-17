@@ -25,11 +25,11 @@ def index(video_file):
     """
     result=video_controller.index(video_file=video_file)
     if result['status'] == 'error':
-        return make_response(jsonify(data=result), 404)
+      return make_response(jsonify(data=result), 404)
     
     video_path = result.get('path')
     
     if not video_path:
-        return make_response(jsonify(data={"error": "Video path not found"}), 404)
+      return make_response(jsonify(data={"error": "Video path not found"}), 404)
       
     return send_file(video_path, mimetype='video/mp4', as_attachment=False)

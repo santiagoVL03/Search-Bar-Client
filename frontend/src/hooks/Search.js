@@ -1,18 +1,25 @@
 import { useState } from 'react'
-import { fetchSearchResults } from '../services/Api'
+import { fetchSearchResults, fetchSearchResultsSpark } from '../services/Api'
 
 export function useSearch() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [results, setResults] = useState(null)
 
-  const searchVideos = async (query) => {
+  const searchVideos = async (query, type) => {
     setLoading(true)
     setError(null)
 
     try {
-      const data = await fetchSearchResults(query)
-      setResults(data)
+      if (type === 'spark') {
+        const data = await fetchSearchResultsSpark(query)
+        setResults(data)
+      } else if (type === 'mr') {
+        const data = await fetchSearchResults(query)
+        setResults(data)
+      } else {
+        throw new Error('You must specify a search type (mr or spark)')
+      }
     } catch (err) {
       setError(err.message || 'Unknown error')
     } finally {
