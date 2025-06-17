@@ -13,7 +13,7 @@ def _ssh_execute(command, host, user, password):
             'export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH && '
             'export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64'
         )
-        full_command = export_env + command
+        full_command = export_env + ' && ' + command
         stdin, stdout, stderr = ssh.exec_command(full_command)
         output = stdout.read().decode('utf-8')
         error = stderr.read().decode('utf-8')

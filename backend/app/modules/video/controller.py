@@ -1,11 +1,12 @@
-from backend.app.utils.functions_ssh import _ssh_execute
+from app.utils.functions_ssh import _ssh_execute
 from flask import send_file
 import json
 import os
 
 class VideoController:
     def __init__(self):
-        config_path = os.path.join(os.path.dirname(__file__), '../../config/config.json')
+        base_dir = os.path.dirname(__file__)
+        config_path = os.path.abspath(os.path.join(base_dir, '../../config/config.json'))
         with open(config_path, 'r') as config_file:
             config = json.load(config_file)
         self.name = 'VideoController'

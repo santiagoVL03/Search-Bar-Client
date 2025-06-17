@@ -1,29 +1,39 @@
 import paramiko
 import json
-from backend.app.utils.functions_ssh import _ssh_execute, parse_hdfs_output_to_json
+from app.utils.functions_ssh import _ssh_execute, parse_hdfs_output_to_json
+import os
 class SearchController:
     def __init__(self):
+        base_dir = os.path.dirname(__file__)
+        config_path = os.path.abspath(os.path.join(base_dir, '../../config/config.json'))
+        with open(config_path, 'r') as config_file:
+            config = json.load(config_file)
         self.name = 'SearchController'
-        self.description = 'Controller for search operations'
-        self.ssh_host = 'worker5'
-        self.ssh_user = 'hduser'
-        self.ssh_password = 'kali'
-        self.hdfs_output_path = '/inverted_index'
-        self.input_path = '/metadata'
-        self.jar_path = '$HADOOP_HOME/share/hadoop/tools/lib/hadoop-streaming-*.jar'
-        self.mapper = "python3 map.py"
-        self.reducer = "python3 reduce.py"
-        self.map = '/home/hduser/BASIC-SEARCH-BAR-IN-CLUSTER/Index/map.py'
-        self.reduce = '/home/hduser/BASIC-SEARCH-BAR-IN-CLUSTER/Index/reduce.py'
+        self.description = 'Controller for show an video from the cluster'
+        self.ssh_host = config['ssh_host']
+        self.ssh_user = config['ssh_user']
+        self.ssh_password = config['ssh_password']
+        self.hdfs_output_path = config['hdfs_output_path']
+        self.input_path = config['input_path']
+        self.jar_path = config['jar_path']
+        self.mapper = config['mapper_cmd']
+        self.reducer = config['reducer_cmd']
+        self.map = config['map_path']
+        self.reduce = config['reduce_path']
 
     def index(self, word = None):
-        # Paso 1: Eliminar salida previa en HDFS
         cleanup_cmd = f'hadoop fs -rm -r {self.hdfs_output_path}'
         cleanup_result = _ssh_execute(cleanup_cmd, self.ssh_host, self.ssh_user, self.ssh_password)
+        
         if cleanup_result['status'] == 'error':
             print(f"Error cleaning up HDFS output: {cleanup_result['output']} THIS ERROR IS NOT BLOCKING")
-
-        # Paso 2: Ejecutar job MapReduce
+        
+        # create_directory_cmd = f'hadoop fs -mkdir -p {self.hdfs_output_path}'
+        # create_directory_result = _ssh_execute(create_directory_cmd, self.ssh_host, self.ssh_user, self.ssh_password)
+        
+        # if create_directory_result['status'] == 'error':
+        #     print(f"Error creating HDFS output directory: {create_directory_result['output']} THIS ERROR IS NOT BLOCKING")
+            
         job_cmd = (
             f"hadoop jar {self.jar_path} "
             f"-input {self.input_path} "
@@ -38,7 +48,6 @@ class SearchController:
         if job_result['status'] == 'error':
             print(f"Error executing MapReduce job: {job_result['output']} THIS ERROR IS NOT BLOCKING")
 
-        # Paso 3: Leer resultados de HDFS
         read_cmd = f'hdfs dfs -cat {self.hdfs_output_path}/part-*'
         read_result = _ssh_execute(read_cmd, self.ssh_host, self.ssh_user, self.ssh_password)
         if read_result['status'] == 'error':
@@ -53,15 +62,12 @@ class SearchController:
         output_json = parse_hdfs_output_to_json(output)
         json_str = json.dumps(output_json, indent=4)
         print(json_str)
-        # Paso 4: Devolver resultados
         if word:
-            # Filtrar resultados por la palabra clave
             filtered_output = {k: v for k, v in output_json.items() if word.lower() in k.lower()}
             return {
                 'status': 'success',
                 'output': filtered_output
             }
-        # Si no se proporciona una palabra clave, devolver todos los resultados
         if not output_json:
             return {
                 'status': 'success',

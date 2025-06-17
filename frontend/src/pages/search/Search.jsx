@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import Results from '../results/Result'
-import { useSearch } from '../../hooks/useSearch'
+import { useSearch } from '../../hooks/Search'
 import Swal from 'sweetalert2'
 
 export default function Search() {
