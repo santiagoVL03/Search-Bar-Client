@@ -26,6 +26,10 @@ class VideoController:
         self.local_video_dir = config['local_video_dir']
 
     def getvideo(self, video_file):
+        command_create_video_dir = f"mkdir -p {self.local_video_dir}"
+        result_create_dir = _ssh_execute(command_create_video_dir, self.ssh_host, self.ssh_user, self.ssh_password)
+        if result_create_dir['status'] == 'error':
+            print(f"Error creating local video directory: {result_create_dir['output']} THIS ERROR IS NOT BLOCKING")
         command = f"hadoop fs -get /oursystem/input/video/{video_file} {self.local_video_dir}/{video_file}"
         result = _ssh_execute(command, self.ssh_host, self.ssh_user, self.ssh_password)
         if result['status'] == 'error':
@@ -50,12 +54,6 @@ class VideoController:
 
         webm_path = local_path_mpg.replace(".mpg", ".webm")
         try:
-            if os.path.exists(webm_path):
-                return {
-                    'status': 'success',
-                    'message': 'Video downloaded and converted successfully.',
-                    'path': webm_path
-                }
             subprocess.run([
                 "ffmpeg", "-y", "-i", local_path_mpg,
                 "-c:v", "libvpx", "-b:v", "1M",
